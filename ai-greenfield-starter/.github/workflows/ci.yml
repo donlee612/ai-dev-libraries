@@ -1,0 +1,94 @@
+# 通用 CI 範本。
+# 預設應用程式是 Node.js：package.json 必須提供 scripts.lint 與 scripts.test。
+# 應用程式若是其他語言，保留 check-refs job，只替換 lint 與 test 的執行指令。
+# 斷鏈檢查只依賴 Node.js，不需要應用程式相依套件。
+name: CI
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          else
+            echo "ERROR: package.json is required so CI can run scripts.lint."
+            exit 1
+          fi
+
+      - name: Run linter
+        shell: bash
+        run: |
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); if(!p.scripts||!p.scripts.lint){process.stderr.write('ERROR: package.json scripts.lint is required\n'); process.exit(1)}"
+          npm run lint
+
+  test:
+    name: Unit test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          elif [ -f package.json ]; then
+            npm install
+          else
+            echo "ERROR: package.json is required so CI can run scripts.test."
+            exit 1
+          fi
+
+      - name: Run unit tests
+        shell: bash
+        run: |
+          node -e "const fs=require('fs'); const p=JSON.parse(fs.readFileSync('package.json','utf8')); if(!p.scripts||!p.scripts.test){process.stderr.write('ERROR: package.json scripts.test is required\n'); process.exit(1)}"
+          npm test
+
+  check-refs:
+    name: Check #REF links
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Check documentation and source references
+        run: node scripts/check-refs.js
