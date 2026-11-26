@@ -5,36 +5,41 @@
 | | `ai-greenfield-starter/` | `ai-company-catchup/` |
 | --- | --- | --- |
 | 使用時機 | 自己從零開一個新專案 | 進公司接手已經存在的舊專案 |
-| 你複製什麼 | 整個資料夾，它就是新專案的根目錄 | 只複製 `AGENTS.md` 與 `.agents/` |
+| 怎麼放進去 | 在規範庫根目錄執行 `node init.js greenfield <路徑>` | 在規範庫根目錄執行 `node init.js catchup <路徑>` |
+| 你複製什麼 | 整個資料夾，它就是新專案的根目錄 | `AGENTS.md`、`.agents/`、`.cursor/rules/core-gate.mdc`。公司已追蹤 `AGENTS.md` 時改放本機檔，不覆蓋公司檔 |
 | 會不會改對方的架構 | 會。新專案從第一天就用 MVC、Doc-Driven、`#REF` | 不會。沿用公司既有目錄、命名與框架 |
 | 筆記與規範進不進 Git | 進。這份新專案的文件與程式一起提交 | 不進公司遠端。用 `.git/info/exclude` 留在本機 |
 | 改程式的閘門 | 你回覆「確認，可以實作」 | 你回覆「確認，可以改」 |
-| 第一個 Skill | `01-doc-architect` | `01-repo-onboarding` |
+| 第一個 Skill | `00-pm-ba`，有畫面再接 `00b-designer` | `01-repo-onboarding` |
+| 長對話紅線 | `.cursor/rules/core-gate.mdc`（`alwaysApply`） | 同左。公司已有 `AGENTS.md` 時改放 `.cursor/rules/catchup-local.mdc` |
 
 ```mermaid
 flowchart TD
   Start[開始] --> Kind{專案從哪裡來}
-  Kind -->|自己從零開發| A[情境 A：複製整個 ai-greenfield-starter]
-  Kind -->|公司已經有程式| B[情境 B：只植入 ai-company-catchup 的文字檔]
+  Kind -->|自己從零開發| A["情境 A：node init.js greenfield"]
+  Kind -->|公司已經有程式| B["情境 B：node init.js catchup"]
 
   A --> A1[用新資料夾開 Cursor]
-  A1 --> A2[貼開局 Prompt，觸發 01-doc-architect]
-  A2 --> A3{你回覆確認，可以實作}
-  A3 -->|是| A4[02-mvc-build-deliver 產程式、測試、Migration，並跑 check-refs.js]
-  A3 -->|要改設計| A2
-  A4 --> A5[之後每個新功能都重跑這個循環]
+  A1 --> A2[貼開局 Prompt，觸發 00-pm-ba 寫 PRD]
+  A2 --> A2b{有畫面嗎}
+  A2b -->|有| A2c["00b-designer 寫 UI 規格，#REF 連回 PRD"]
+  A2b -->|純後端| A2d[UI 規格標註略過]
+  A2c --> A3{你回覆確認，可以設計}
+  A2d --> A3
+  A3 -->|是| A4["01-doc-architect 寫 MVC 文件並 #REF 回功能與畫面"]
+  A3 -->|要改需求| A2
+  A4 --> A5{你回覆確認，可以實作}
+  A5 -->|是| A6[02-mvc-build-deliver 產程式、測試、Migration，並跑 check-refs.js]
+  A5 -->|要改設計| A4
+  A6 --> A7[之後每個新功能都從 PRD 錨點重跑]
 
-  B --> B1[複製 AGENTS.md 與 .agents]
-  B1 --> B2[寫入 .git/info/exclude]
-  B2 --> B3{公司根目錄是否已有 AGENTS.md}
-  B3 -->|沒有| B4[直接使用複製來的 AGENTS.md]
-  B3 -->|已有且被 Git 追蹤| B5[不覆蓋公司檔，改放 docs/catchup/LOCAL_AGENTS.md]
-  B4 --> B6[貼對應情境的 Prompt]
-  B5 --> B6
-  B6 --> B7[盤點與追蹤只寫 docs/catchup]
-  B7 --> B8{要修 Bug 或加功能}
-  B8 -->|要| B9[03-safe-feature-pr 先給計畫，確認後才改碼]
-  B8 -->|先看懂| B7
+  B --> B1["腳本判斷 AGENTS.md 有沒有被追蹤"]
+  B1 --> B2[直接植入或安全合併，並寫入 exclude]
+  B2 --> B3[貼對應情境的 Prompt]
+  B3 --> B4[盤點與追蹤只寫 docs/catchup]
+  B4 --> B5{要修 Bug 或加功能}
+  B5 -->|要| B6[03-safe-feature-pr 先給計畫，確認後才改碼]
+  B5 -->|先看懂| B4
 ```
 
 下面的路徑以這台電腦的預設位置為例：
@@ -51,9 +56,25 @@ C:\Users\user\Desktop\ai-dev-libraries
 
 用 `ai-greenfield-starter/`。新專案會強制文件先行：先寫 `docs/`，你確認後才改 `src/`。
 
-### Step 1：複製與初始化
+### Step 1：一鍵初始化
 
-把來源整個複製到一個新的空目錄。目標目錄請先不存在，避免把檔案混進別的專案。
+在規範庫根目錄執行。目標目錄請先不存在，或是空目錄。目錄裡已有檔案時，腳本會停止，避免蓋掉別的專案。
+
+```powershell
+node C:\Users\user\Desktop\ai-dev-libraries\init.js greenfield C:\Users\user\Desktop\my-new-app
+```
+
+```bash
+node "$HOME/Desktop/ai-dev-libraries/init.js" greenfield "$HOME/Desktop/my-new-app"
+```
+
+這條指令會複製整個 `ai-greenfield-starter/`（含 `.agents`、`.cursor`、`.github`、`.env.example`），執行 `git init -b main`，再執行 `node scripts/check-refs.js`。結束碼應為 0。
+
+接著用 Cursor 開啟新資料夾，不要開 `ai-dev-libraries` 本身。
+
+#### 手動等價步驟
+
+下面這組指令與 `init.js greenfield` 做同一件事。
 
 Windows PowerShell：
 
@@ -77,9 +98,7 @@ git init -b main
 node scripts/check-refs.js
 ```
 
-`node scripts/check-refs.js` 結束碼應為 0，並印出掃描檔案數與連結數。這一支腳本只掃描 `docs/` 與 `src/`。
-
-接著用 Cursor 開啟 `$dst` 那個新資料夾，不要開 `ai-dev-libraries` 本身。
+`node scripts/check-refs.js` 結束碼應為 0，並印出掃描檔案數與連結數。這一支腳本只掃描 `docs/` 與 `src/`。用 `init.js` 時，這一步已經跑過。
 
 新專案第一天還有兩件要補，否則 `.github/workflows/ci.yml` 的 Lint 與 Unit test 會失敗：
 
@@ -88,22 +107,52 @@ node scripts/check-refs.js
 
 `Check #REF links` 這個 job 不需要 `package.json`，現在就能過。
 
-### Step 2：啟動設計階段
+### Step 2：產品需求（PM / BA）
 
-在新專案的 Cursor 對話貼上下面整段。尖括號改成你的技術棧與需求後再送出。
+在新專案的 Cursor 對話貼上下面整段，或呼叫 `@pm-ba`。尖括號改成你的點子後再送出。
 
 ```text
-請先讀 AGENTS.md 與 docs/00-architecture.md。
+請先讀 AGENTS.md 與 .cursor/rules/core-gate.mdc。
+請依照 .agents/skills/00-pm-ba/SKILL.md 處理這個點子：<用三句話寫誰要做什麼、成功時看得到什麼、失敗時不能發生什麼>。
+請更新 docs/00-prd.md。每個功能點使用 {#feat-<english-slug>} 錨點，並保留既有的 #REF。
+我回覆「確認，可以設計」之前，不要修改 src/、tests/、db/，也不要寫 MVC 設計文件。
+寫完後執行 node scripts/check-refs.js。
+```
+
+這一輪結束時，你應該看到功能錨點、業務目標、未決問題，以及一句「尚未修改 src/」。
+
+「確認，可以設計」只進入下一份文件。它不允許改程式。
+
+### Step 3：介面規格（Designer）
+
+有畫面時貼下面這段，或呼叫 `@designer`。純後端就在回覆裡寫明，讓 `docs/00-ui-spec.md` 保留「純後端專案，略過 UI 規格」，並維持與 PRD 的 `#REF`。
+
+```text
+請依照 .agents/skills/00b-designer/SKILL.md，讀 docs/00-prd.md 已確認的功能錨點。
+有畫面則更新 docs/00-ui-spec.md：畫面架構、元件階層、Loading / Empty / Error、Design Token。
+每個畫面用 {#screen-<english-slug>}，並寫 #REF: [00-prd.md#feat-<slug>] 連回 PRD。PRD 的該功能也要指回這個畫面。
+沒有前端則保留「純後端專案，略過 UI 規格」。
+我回覆「確認，可以設計」之前，不要修改 src/。
+寫完後執行 node scripts/check-refs.js。
+```
+
+### Step 4：啟動架構設計
+
+PRD 與需要的 UI 規格都經過「確認，可以設計」之後，貼下面整段，或呼叫 `@architect`。尖括號改成你的技術棧。
+
+```text
+請先讀 AGENTS.md、docs/00-prd.md、docs/00-ui-spec.md 與 docs/00-architecture.md。
 本專案技術棧：Node.js 20、TypeScript、Express、PostgreSQL。測試用 node:test。
-請依照 .agents/skills/01-doc-architect/SKILL.md 處理這個需求：<用三句話寫使用者做得到什麼、輸入是什麼、失敗時要怎樣>。
-請把 <PROJECT_NAME> 寫進 docs/00-architecture.md，為每個 Model、Controller、Service、View 建立 1:1 的 docs 設計文件，並寫上雙向 #REF。
+請依照 .agents/skills/01-doc-architect/SKILL.md 處理已確認的功能錨點：<#feat-xxx>。
+請把 <PROJECT_NAME> 寫進 docs/00-architecture.md，為每個 Model、Controller、Service、View 建立 1:1 的 docs 設計文件。
+每份模組文件用 #REF 連回 PRD 的功能錨點；有畫面再連回 UI 規格的畫面錨點。上游章節要有指回的 #REF。
 我回覆「確認，可以實作」之前，不要修改 src/、tests/、db/migrations/、.env.example。
 寫完後執行 node scripts/check-refs.js，把結果與「請確認設計文件」區塊一起給我。
 ```
 
-這一輪結束時，你應該看到設計文件路徑、影響範圍、Migration 檔名或「無」、環境變數或「無」，以及一句「尚未修改 src/」。
+這一輪結束時，你應該看到設計文件路徑、影響範圍、上游錨點、Migration 檔名或「無」、環境變數或「無」，以及一句「尚未修改 src/」。
 
-### Step 3：通關密語確認
+### Step 5：通關密語確認
 
 只有下面三句會放行實作：
 
@@ -113,7 +162,7 @@ node scripts/check-refs.js
 
 `好`、`繼續`、`嗯`、`你看著辦` 不會放行。代理會再問一次。
 
-你接受後，貼：
+你接受後，貼下面這段，或呼叫 `@programmer`：
 
 ```text
 確認，可以實作。
@@ -139,17 +188,25 @@ node scripts/check-refs.js
 
 通過才輸出 Conventional Commit 與 PR 描述。你沒有在同一句話裡要求提交時，它不會執行 `git commit` 或 `git push`。
 
-### Step 4：日常開發與新增功能循環
+### Step 6：日常開發與新增功能循環
 
-每一個新功能或會改行為的重構都重跑 Step 2 與 Step 3。把需求換成這一次要做的事：
+每一個新功能或會改行為的重構，都從 PRD 的功能錨點開始，再重跑 Step 2 到 Step 5。先更新 `docs/00-prd.md`，有畫面再更新 `docs/00-ui-spec.md`，確認可以設計後才改架構文件：
 
 ```text
-請依照 .agents/skills/01-doc-architect/SKILL.md 新增功能：<功能名稱>。
-先更新 docs/ 的設計文件與 docs/00-architecture.md 的映射表，補上雙向 #REF。
+請依照 .agents/skills/00-pm-ba/SKILL.md 新增功能：<功能名稱>。
+在 docs/00-prd.md 建立 {#feat-<slug>}，有畫面則同步更新 docs/00-ui-spec.md 的 {#screen-<slug>}，雙向 #REF 都要連上。
+我回覆「確認，可以設計」之前，不要改 src/，也不要先寫 MVC 文件。
+```
+
+確認可以設計後：
+
+```text
+請依照 .agents/skills/01-doc-architect/SKILL.md 為 <#feat-slug> 更新 docs/ 的設計文件與 docs/00-architecture.md 的映射表。
+模組文件必須 #REF 回這個功能錨點與對應畫面錨點。
 我回覆「確認，可以實作」之前，不要改 src/。
 ```
 
-確認後：
+確認可以實作後：
 
 ```text
 確認，可以實作。
@@ -169,6 +226,25 @@ node scripts/check-refs.js
 以下指令都在公司專案的根目錄執行。來源路徑維持這套武器庫的位置。
 
 ### Step 1：無痛植入與防污染設定
+
+在規範庫根目錄執行。目標必須是公司專案的根目錄，而且已經是 Git 儲存庫。
+
+```powershell
+node C:\Users\user\Desktop\ai-dev-libraries\init.js catchup C:\path\to\company-repo
+```
+
+```bash
+node "$HOME/Desktop/ai-dev-libraries/init.js" catchup /path/to/company-repo
+```
+
+腳本會執行 `git ls-files --error-unmatch AGENTS.md`：
+
+- 沒有被追蹤：複製 `AGENTS.md`、`.agents/`、`.cursor/rules/core-gate.mdc`，建立 `docs/catchup/`。
+- 已經被追蹤：不覆蓋公司的 `AGENTS.md`。規範存成 `docs/catchup/LOCAL_AGENTS.md`，Skill 合併進 `.agents/skills/`（已被追蹤的同名 Skill 略過），紅線存成 `.cursor/rules/catchup-local.mdc`。
+- 兩種情況都會把實際植入的路徑寫進 `.git/info/exclude`。同一行已經在檔裡就不再寫一次。
+- 最後執行 `git status --short`。植入檔案不該出現。公司原本就有的其他修改仍會列出來。
+
+下面的手動指令與這支腳本做同一件事。需要對照路徑時再往下讀。
 
 先看公司有沒有自己的 `AGENTS.md`，以及它有沒有被 Git 追蹤。
 
@@ -192,6 +268,8 @@ Windows PowerShell：
 $lib = "C:\Users\user\Desktop\ai-dev-libraries\ai-company-catchup"
 Copy-Item -Path (Join-Path $lib "AGENTS.md") -Destination ".\AGENTS.md"
 Copy-Item -Path (Join-Path $lib ".agents") -Destination ".\.agents" -Recurse
+New-Item -ItemType Directory -Force -Path ".\.cursor\rules" | Out-Null
+Copy-Item -Path (Join-Path $lib ".cursor\rules\core-gate.mdc") -Destination ".\.cursor\rules\core-gate.mdc"
 New-Item -ItemType Directory -Force -Path ".\docs\catchup" | Out-Null
 $exclude = ".\.git\info\exclude"
 $marker = "# local AI catchup, do not commit"
@@ -203,10 +281,11 @@ if ($raw -notmatch [regex]::Escape($marker)) {
 # local AI catchup, do not commit
 /AGENTS.md
 /.agents/
+/.cursor/rules/core-gate.mdc
 /docs/catchup/
 "@ | Add-Content -Path $exclude -Encoding utf8
 }
-git check-ignore -v --no-index AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md docs/catchup
+git check-ignore -v --no-index AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md .cursor/rules/core-gate.mdc docs/catchup
 git status --short
 ```
 
@@ -216,7 +295,8 @@ Mac / Linux：
 lib="$HOME/Desktop/ai-dev-libraries/ai-company-catchup"
 cp "$lib/AGENTS.md" ./AGENTS.md
 cp -R "$lib/.agents" ./.agents
-mkdir -p ./docs/catchup
+mkdir -p ./.cursor/rules ./docs/catchup
+cp "$lib/.cursor/rules/core-gate.mdc" ./.cursor/rules/core-gate.mdc
 exclude=".git/info/exclude"
 marker="# local AI catchup, do not commit"
 touch "$exclude"
@@ -226,16 +306,17 @@ if ! grep -qF "$marker" "$exclude"; then
 # local AI catchup, do not commit
 /AGENTS.md
 /.agents/
+/.cursor/rules/core-gate.mdc
 /docs/catchup/
 EOF
 fi
-git check-ignore -v --no-index AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md docs/catchup
+git check-ignore -v --no-index AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md .cursor/rules/core-gate.mdc docs/catchup
 git status --short
 ```
 
-成功時，`git check-ignore` 三行都指向 `.git/info/exclude`，`git status --short` 沒有 `AGENTS.md`、`.agents/`、`docs/catchup/`。
+成功時，`git check-ignore` 這四個路徑都指向 `.git/info/exclude`，`git status --short` 沒有 `AGENTS.md`、`.agents/`、`.cursor/rules/core-gate.mdc`、`docs/catchup/`。
 
-不要把這三條規則寫進公司的 `.gitignore`。那個檔會被提交。
+不要把這些路徑寫進公司的 `.gitignore`。那個檔會被提交。
 
 #### 若公司原本已有 `AGENTS.md`
 
@@ -254,6 +335,8 @@ if (Test-Path ".\.agents") {
 } else {
   Copy-Item -Path (Join-Path $lib ".agents") -Destination ".\.agents" -Recurse
 }
+New-Item -ItemType Directory -Force -Path ".\.cursor\rules" | Out-Null
+Copy-Item -Path (Join-Path $lib ".cursor\rules\core-gate.mdc") -Destination ".\.cursor\rules\catchup-local.mdc"
 $exclude = ".\.git\info\exclude"
 $marker = "# local AI catchup, do not commit"
 if (-not (Test-Path $exclude)) { New-Item -ItemType File -Force -Path $exclude | Out-Null }
@@ -266,9 +349,10 @@ if ($raw -notmatch [regex]::Escape($marker)) {
 /.agents/skills/01-repo-onboarding/
 /.agents/skills/02-trace-and-doc/
 /.agents/skills/03-safe-feature-pr/
+/.cursor/rules/catchup-local.mdc
 "@ | Add-Content -Path $exclude -Encoding utf8
 }
-git check-ignore -v --no-index docs/catchup/LOCAL_AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md
+git check-ignore -v --no-index docs/catchup/LOCAL_AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md .cursor/rules/catchup-local.mdc
 git status --short
 git diff -- AGENTS.md
 ```
@@ -280,6 +364,8 @@ lib="$HOME/Desktop/ai-dev-libraries/ai-company-catchup"
 mkdir -p ./docs/catchup ./.agents/skills
 cp "$lib/AGENTS.md" ./docs/catchup/LOCAL_AGENTS.md
 cp -R "$lib/.agents/skills/." ./.agents/skills/
+mkdir -p ./.cursor/rules
+cp "$lib/.cursor/rules/core-gate.mdc" ./.cursor/rules/catchup-local.mdc
 exclude=".git/info/exclude"
 marker="# local AI catchup, do not commit"
 touch "$exclude"
@@ -291,9 +377,10 @@ if ! grep -qF "$marker" "$exclude"; then
 /.agents/skills/01-repo-onboarding/
 /.agents/skills/02-trace-and-doc/
 /.agents/skills/03-safe-feature-pr/
+/.cursor/rules/catchup-local.mdc
 EOF
 fi
-git check-ignore -v --no-index docs/catchup/LOCAL_AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md
+git check-ignore -v --no-index docs/catchup/LOCAL_AGENTS.md .agents/skills/01-repo-onboarding/SKILL.md .cursor/rules/catchup-local.mdc
 git status --short
 git diff -- AGENTS.md
 ```
@@ -304,7 +391,9 @@ git diff -- AGENTS.md
 公司既有 AGENTS.md 優先。接手規則以 docs/catchup/LOCAL_AGENTS.md 為準。兩者衝突時聽從公司檔。
 ```
 
-若 `.agents/skills/01-repo-onboarding` 這個名字公司已經有了，先停下來問人，不要覆蓋。
+若 `.agents/skills/01-repo-onboarding` 這個名字公司已經有，而且被 Git 追蹤，不要覆蓋。`init.js` 會略過這種 Skill。手動複製前先停下來問人。
+
+安全合併時，在 `catchup-local.mdc` 開頭註明：公司既有 `AGENTS.md` 優先。`init.js` 會自動加上這段。
 
 ### Step 2：三大情境開箱即用 Prompt 庫
 
@@ -363,7 +452,9 @@ PR 描述要包含變更摘要、影響評估、測試步驟。不要 commit，�
 | 你要升級的行為 | 改這個檔 |
 | --- | --- |
 | 從零專案的語言、文件閘門、MVC、`#REF`、日誌、Commit、PR | `ai-greenfield-starter/AGENTS.md` |
-| 設計文件要多寫哪一節、確認前禁止碰哪些路徑 | `ai-greenfield-starter/.agents/skills/01-doc-architect/SKILL.md` |
+| PRD 要寫哪些節、功能錨點、確認前禁止碰哪些路徑 | `ai-greenfield-starter/.agents/skills/00-pm-ba/SKILL.md` |
+| 畫面、Loading / Empty / Error、Design Token、略過 UI | `ai-greenfield-starter/.agents/skills/00b-designer/SKILL.md` |
+| 設計文件要多寫哪一節、如何 `#REF` 回 PRD 與畫面 | `ai-greenfield-starter/.agents/skills/01-doc-architect/SKILL.md` |
 | 施工順序、測試要斷言什麼、交付報告欄位 | `ai-greenfield-starter/.agents/skills/02-mvc-build-deliver/SKILL.md` |
 | 新專案的分層圖、例外表、環境變數表 | `ai-greenfield-starter/docs/00-architecture.md` |
 | 斷鏈怎樣算失敗 | `ai-greenfield-starter/scripts/check-refs.js` |
@@ -374,6 +465,10 @@ PR 描述要包含變更摘要、影響評估、測試步驟。不要 commit，�
 | 呼叫鏈要追到哪、`#REF` 怎麼寫進私人筆記 | `ai-company-catchup/.agents/skills/02-trace-and-doc/SKILL.md` |
 | 修改計畫欄位、確認關鍵字、PR 描述 | `ai-company-catchup/.agents/skills/03-safe-feature-pr/SKILL.md` |
 | 複製指令、exclude、開箱 Prompt | `ai-company-catchup/SETUP_GUIDE.md` 與本檔 `README.md` |
+| 一鍵初始化做了什麼 | 根目錄 `init.js` |
+| 長對話仍要套用的紅線 | 兩套庫的 `.cursor/rules/core-gate.mdc` |
+| Cursor 裡的 `@pm-ba`、`@designer`、`@architect`、`@programmer` | `ai-greenfield-starter/.cursor/agents/` |
+| Grok Bot 怎麼派工 | `GROK_ORCHESTRATOR.md` |
 
 改完 Greenfield 的 `docs/` 或 `src/` 之後，在 `ai-greenfield-starter` 執行：
 
@@ -383,7 +478,18 @@ node scripts/check-refs.js
 
 結束碼不是 0 就先修連結，再提交武器庫。改 Skill 或 `AGENTS.md` 時，用一則新對話貼對應的 Prompt，確認代理仍會停下來等你。
 
-公司專案裡的副本不會自動更新。武器庫改完後，對該公司專案再執行一次情境 B 的複製指令。`Copy-Item -Force` 會蓋掉你在公司本機改過的同一份 Skill。公司 `docs/catchup/` 裡的筆記不要重拷，那些是你的閱讀紀錄。
+公司專案裡的副本不會自動更新。武器庫改完後，對該公司專案再執行一次 `node init.js catchup <公司專案路徑>`。腳本會更新未被 Git 追蹤的接手 Skill，並覆寫 `docs/catchup/LOCAL_AGENTS.md`。`docs/catchup/` 裡你自己的導讀不要刪。
+
+---
+
+## Grok Bot ＋ Cursor
+
+兩套引擎分工。Grok 負責把點子問清楚並寫出派工 Prompt。Cursor 負責在目標儲存庫裡守規則、寫文件、寫程式。
+
+1. 把根目錄 `GROK_ORCHESTRATOR.md` 設成 Grok Bot 的系統提示。跟它把業務目標、User Story、輸入輸出、邊界、失敗處理，以及這是 greenfield 還是 catchup 談完。它會交回一份設計簡報、一條 `node init.js` 指令，和一段 Cursor 啟動 Prompt。
+2. 在規範庫根目錄執行那條 `init.js`。Greenfield 開新目錄；Catchup 進公司專案根目錄。
+3. 用 Cursor 打開目標專案，貼上 Grok 產生的 Prompt。`.cursor/rules/core-gate.mdc` 會以 `alwaysApply: true` 套進之後每一則對話。Greenfield 也可以直接呼叫 `@pm-ba`、`@designer`、`@architect`、`@programmer`，它們分別指向對應的 Skill。
+4. 通關密語由你自己打。「確認，可以設計」只進入文件。「確認，可以實作」或「確認，可以改」才允許改程式。Grok 不代替你說這幾句。
 
 ---
 
@@ -391,8 +497,8 @@ node scripts/check-refs.js
 
 ### AI 忘記遵守規則怎麼辦
 
-1. 新開一個對話。長對話裡的舊結論常常蓋過規範。
-2. 第一則訊息就寫出 Skill 的路徑，例如 `.agents/skills/01-doc-architect/SKILL.md`，並寫「請先讀 AGENTS.md」。
+1. 新開一個對話。長對話裡的舊結論常常蓋過規範。`.cursor/rules/core-gate.mdc` 仍會套用，但 Skill 的步驟要在第一則訊息點名。
+2. 第一則訊息就寫出 Skill 的路徑，例如 `.agents/skills/00-pm-ba/SKILL.md` 或 `.agents/skills/01-doc-architect/SKILL.md`，並寫「請先讀 AGENTS.md」。Greenfield 也可以直接 `@pm-ba` 或 `@architect`。
 3. 在 Cursor 用 `@AGENTS.md` 把規範掛進這一次對話。
 4. 它若已經改了 `src/` 而你還沒說確認關鍵字，回這句：
 

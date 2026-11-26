@@ -1,8 +1,12 @@
 # AGENTS.md — Greenfield 新專案開發規範
 
-本檔是從零建立新專案時的最高優先規範。代理在這個儲存庫工作時，先讀本檔，再讀 [docs/00-architecture.md](docs/00-architecture.md)，然後只載入與當前任務對應的 Skill。
+本檔是從零建立新專案時的最高優先規範。代理在這個儲存庫工作時，先讀本檔，再依任務讀 [docs/00-prd.md](docs/00-prd.md)、[docs/00-ui-spec.md](docs/00-ui-spec.md) 與 [docs/00-architecture.md](docs/00-architecture.md)，然後只載入與當前任務對應的 Skill。
 
+#REF: [docs/00-prd.md#features] - 功能錨點的上游清單
+#REF: [docs/00-ui-spec.md#screens] - 畫面錨點；純後端時標註略過
 #REF: [docs/00-architecture.md#system-boundary] - 系統邊界與預設分層的總覽
+#REF: [.agents/skills/00-pm-ba/SKILL.md#stop] - 模糊需求先寫 PRD，確認前不進架構與程式
+#REF: [.agents/skills/00b-designer/SKILL.md#stop] - 有畫面時先寫 UI 規格並連回 PRD
 #REF: [.agents/skills/01-doc-architect/SKILL.md#stop] - 設計文件寫完後必須停下等待確認
 #REF: [.agents/skills/02-mvc-build-deliver/SKILL.md#checks] - 確認後才按文件施工並做交付檢查
 
@@ -17,6 +21,12 @@
 ## 核心鐵律（文件先行） {#doc-first}
 
 任何新功能或重構，在修改 `src/` 之前，必須先在 `docs/` 建立或更新對應的 `.md` 設計文件，並得到使用者對該份文件的確認。
+
+上游角色先於 MVC 文件：
+
+1. 模糊點子、業務目標或 User Story 先交給 `.agents/skills/00-pm-ba/SKILL.md`，寫入 `docs/00-prd.md`。每個功能點使用 `{#feat-<slug>}`。使用者說出「確認，可以設計」之前，不寫 MVC 設計文件，也不修改 `src/`、`tests/`、`db/`。
+2. 有畫面時交給 `.agents/skills/00b-designer/SKILL.md`，寫入 `docs/00-ui-spec.md`，並用 `#REF` 連回 PRD 的功能錨點。沒有前端時，該檔標註「純後端專案，略過 UI 規格」，仍然與 PRD 互連。
+3. 「確認，可以設計」只代表可以進入架構文件。修改 `src/` 仍然要等 `01-doc-architect` 的設計文件被「確認，可以實作」「同意這個設計」或「按文件做」接受。
 
 以下變更算重構或行為變更，一律先改文件：
 
@@ -180,9 +190,18 @@ PR 描述使用以下標題，沒有發生的項目寫「無」並附原因：
 ```text
 AGENTS.md
 .env.example
+.agents/skills/00-pm-ba/SKILL.md
+.agents/skills/00b-designer/SKILL.md
 .agents/skills/01-doc-architect/SKILL.md
 .agents/skills/02-mvc-build-deliver/SKILL.md
+.cursor/rules/core-gate.mdc
+.cursor/agents/pm-ba.md
+.cursor/agents/designer.md
+.cursor/agents/architect.md
+.cursor/agents/programmer.md
 .github/workflows/ci.yml
+docs/00-prd.md
+docs/00-ui-spec.md
 docs/00-architecture.md
 docs/models|controllers|services|views/<Name>.md
 scripts/check-refs.js
@@ -196,6 +215,7 @@ tests/<layer>/<Name>.test.*
 ## 交付前檢查清單 {#checklist}
 
 - [ ] 行為變更都有先更新的 `docs/` 文件，且使用者已明確接受。
+- [ ] 這次行為對應的功能已寫在 `docs/00-prd.md` 的 `{#feat-<slug>}`；有畫面時 `docs/00-ui-spec.md` 有 `{#screen-<slug>}`，而且雙向 `#REF` 已連上。
 - [ ] Model、Controller、Service、View 都是 1:1 同名文件；類別頂部有 `// #REF` 或同等單行註解。
 - [ ] 雙向 `#REF` 已互指，`node scripts/check-refs.js` 結束碼為 0。
 - [ ] Controller 沒有業務分支；Model 沒有 HTTP；View 沒有重新計算業務結果。
@@ -210,5 +230,7 @@ tests/<layer>/<Name>.test.*
 
 | 時機 | Skill |
 | --- | --- |
-| 新功能、重構、或任何想改 `src/` 的請求，文件尚未確認 | `.agents/skills/01-doc-architect/SKILL.md` |
+| 模糊點子或新需求，PRD 尚未確認 | `.agents/skills/00-pm-ba/SKILL.md` |
+| PRD 已有功能，要補畫面或標成純後端 | `.agents/skills/00b-designer/SKILL.md` |
+| 上游文件已可進入設計，MVC 設計文件尚未確認 | `.agents/skills/01-doc-architect/SKILL.md` |
 | 使用者已明確接受對應設計文件，要按文件實作並交付 | `.agents/skills/02-mvc-build-deliver/SKILL.md` |

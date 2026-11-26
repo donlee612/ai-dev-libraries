@@ -1,0 +1,15 @@
+---
+description: Greenfield 文件閘門與改碼紅線。未說出實作確認前禁止改程式。
+alwaysApply: true
+---
+
+# 改碼紅線
+
+- 先讀 `AGENTS.md`。對使用者的回覆使用繁體中文。
+- 模糊需求先走 `.agents/skills/00-pm-ba/SKILL.md`，寫 `docs/00-prd.md`。有畫面再走 `.agents/skills/00b-designer/SKILL.md`。PRD 未經「確認，可以設計」接受前，不開始 MVC 設計，也不改程式。
+- 「確認，可以設計」只進入文件。它不允許修改 `src/`、`tests/`、`db/`、`.env.example`。
+- 未收到「確認，可以實作」「同意這個設計」或「按文件做」之前，禁止建立或修改 `src/`、`tests/`、`db/`、`.env.example`。
+- 「好」「繼續」「嗯」「你看著辦」不算確認。再問一次。
+- 施工只改已確認設計文件列出的路徑。
+- `docs/` 與 `src/` 的 `#REF` 使用相對路徑，雙向都要有。交付前執行 `node scripts/check-refs.js`，結束碼須為 0。
+- 禁止寫入真實密碼、API Key、Token。禁止在 `src/` 使用 `console.log` 或 `print(`。

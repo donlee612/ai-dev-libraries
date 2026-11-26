@@ -1,0 +1,14 @@
+---
+description: 接手公司專案的紅線。未確認前不改公司程式，私人筆記不進 Git。
+alwaysApply: true
+---
+
+# 接手紅線
+
+- 公司既有目錄、命名、框架與 `AGENTS.md` 優先於本機接手規範。公司檔與 `docs/catchup/LOCAL_AGENTS.md` 衝突時，聽從公司檔。
+- 未收到「確認，可以改」或「按這個計畫改」之前，禁止修改公司程式、設定、lockfile 與 CI。
+- 「好」「繼續」「嗯」「你看著辦」不算確認。再問一次。
+- 盤點與追蹤只寫 `docs/catchup/`。禁止為了湊 MVC 或 OOP 而重寫能運作的程式，禁止新增公司原本沒有的頂層架構目錄。
+- 禁止把 `AGENTS.md`、`.agents/`、`docs/catchup/`、`.cursor/rules/core-gate.mdc`、`.cursor/rules/catchup-local.mdc` 加入 Git，也禁止把這些路徑寫進公司的 `.gitignore`。它們只留在 `.git/info/exclude`。
+- 筆記與回覆不複製密碼、API Key、Token、私鑰、連線字串的值。只寫路徑與變數名稱。
+- 不執行 `git commit` 或 `git push`，除非使用者在該次對話明確要求。提交內容不得包含上述私人檔。

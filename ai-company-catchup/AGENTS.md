@@ -51,7 +51,7 @@
 
 導讀、追蹤與變更設計只放在 `docs/catchup/`。不要把這些筆記寫進公司原本的 `README` 或正式文件目錄，除非使用者明確要求貢獻給團隊。
 
-`AGENTS.md`、`.agents/`、`docs/catchup/` 必須留在本機忽略清單。設定方式見 `SETUP_GUIDE.md`。
+`AGENTS.md`、`.agents/`、`.cursor/rules/core-gate.mdc`、`.cursor/rules/catchup-local.mdc` 與 `docs/catchup/` 必須留在本機忽略清單。設定方式見 `SETUP_GUIDE.md`。公司已經追蹤 `AGENTS.md` 時，不要覆蓋它；接手憲法改放 `docs/catchup/LOCAL_AGENTS.md`，Cursor 紅線改放 `.cursor/rules/catchup-local.mdc`。
 
 ## 技能對照 {#skills}
 
