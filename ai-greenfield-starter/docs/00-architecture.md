@@ -2,7 +2,7 @@
 
 專案名稱：`<PROJECT_NAME>`
 
-本檔是新專案的架構契約。第一個功能開始前，把 `<PROJECT_NAME>` 換成真實名稱，並在「系統邊界」補上這個系統做什麼、不對誰提供服務。之後每一個 Model、Controller、Service、View 都在本檔的映射表加一列，並另寫 1:1 設計文件。
+本檔是新專案的架構契約。產品做什麼寫在 `docs/00-prd.md`，畫面與互動寫在 `docs/00-ui-spec.md`。這兩份上游文件確認之後，才把 `<PROJECT_NAME>` 換成真實名稱，並在「系統邊界」補上這個系統做什麼、不對誰提供服務。之後每一個 Model、Controller、Service、View 都在本檔的映射表加一列，並另寫 1:1 設計文件。模組文件用 `#REF` 連回已經存在的功能錨點；有畫面時再連回畫面錨點。
 
 本檔是範本，也是會被 `scripts/check-refs.js` 檢查的正式文件。下面的 `#REF` 都指向已存在的檔案與章節。
 
@@ -20,11 +20,26 @@
 
 邊界外：
 
-- 不在本範本決定產品功能、部署平台與雲端供應商。那些決定寫進本節，不寫進程式常數。
+- 產品做什麼、為誰做，以 `docs/00-prd.md` 為準。畫面與互動狀態以 `docs/00-ui-spec.md` 為準。部署平台與雲端供應商寫進本節，不寫進程式常數。
 - 不在程式裡寫死環境差異。執行期設定來自環境變數。
 
 #REF: [00-architecture.md#layers] - 邊界內四層各自允許與禁止的職責
 #REF: [../.env.example] - `APP_ENV`、`PORT`、`LOG_LEVEL`、`DB_URL` 的名稱範本
+#REF: [00-prd.md#goals] - 產品範圍以 PRD 的業務目標為準
+
+## 上游文件 {#upstream}
+
+產品範圍與畫面先於分層。本檔只承接已經寫在上游文件裡的決定。
+
+| 文件 | 角色 | 錨點 |
+| --- | --- | --- |
+| `docs/00-prd.md` | 產品經理與商業分析師 | 每個功能 `{#feat-<slug>}` |
+| `docs/00-ui-spec.md` | UI/UX 設計師 | 每個畫面 `{#screen-<slug>}`；沒有前端時標註「純後端專案，略過 UI 規格」 |
+
+`01-doc-architect` 撰寫模組設計文件時，若這兩份檔案存在，必須用 `#REF` 連回該模組實作的功能錨點；有畫面再連回畫面錨點。上游章節要有一條指回模組文件的 `#REF`。錨點尚未建立時，先回到上游 Skill 補上標題，再寫連結。`docs/` 裡不寫尚不存在的路徑。
+
+#REF: [00-prd.md#features] - 功能清單是模組職責的上游
+#REF: [00-ui-spec.md#screens] - 畫面清單是 View 的上游；純後端時本節標註略過
 
 ## 架構總覽 {#architecture-diagram}
 
@@ -89,7 +104,7 @@ db/migrations/<timestamp>_<name>.sql
 tests/<layer>/<Name>.test.*
 ```
 
-目前 `src/models/`、`src/controllers/`、`src/views/`、`src/services/` 只有 `.gitkeep`。尚無業務類別，所以還沒有 `docs/models/` 等檔案。新增類別時，同一變更必須同時有程式、設計文件、頂部 `#REF` 與單元測試。
+目前 `src/models/`、`src/controllers/`、`src/views/`、`src/services/` 只有 `.gitkeep`。尚無業務類別，所以還沒有 `docs/models/` 等檔案。`docs/00-prd.md` 與 `docs/00-ui-spec.md` 是上游範本，裡面尚無已確認的功能與畫面。新增類別時，同一變更必須同時有程式、設計文件、頂部 `#REF`、單元測試，以及指回既有功能錨點的 `#REF`。有畫面的 View 再指回畫面錨點。
 
 映射表（有第一個模組後往下加，禁止只改程式不加列）：
 
@@ -99,6 +114,7 @@ tests/<layer>/<Name>.test.*
 
 #REF: [00-architecture.md#layers] - 映射所依據的分層職責
 #REF: [00-architecture.md#ref-examples] - 映射建立之後連結怎麼互指
+#REF: [00-architecture.md#upstream] - 映射前先對上 PRD 與 UI 規格的錨點
 
 ## 資料流 {#data-flow}
 

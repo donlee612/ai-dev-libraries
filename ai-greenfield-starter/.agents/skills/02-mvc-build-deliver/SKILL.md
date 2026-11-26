@@ -21,7 +21,7 @@ description: >-
 
 ## 施工步驟 {#sop}
 
-1. 重讀使用者接受的那幾份設計文件，以及 `docs/00-architecture.md` 被那些文件指向的章節。
+1. 重讀使用者接受的那幾份設計文件，以及 `docs/00-architecture.md` 被那些文件指向的章節。文件裡指向 `docs/00-prd.md` 或 `docs/00-ui-spec.md` 的 `#REF` 要保留，施工時不要拆掉上游鏈。
 2. 列出將要改的路徑。這份清單必須是設計文件影響範圍的子集。多出來的路徑先回到設計文件，重新請求確認。
 3. 依文件實作，順序為 Model、Service、Controller、View。先讓不變量在 Model 內失敗，再讓 Service 編排，最後才接請求。
 4. 每個主要類別在 import 之後、類別宣告之前寫入 `#REF` 註解。
